@@ -34,6 +34,15 @@ ok "our git aliases work"             '[ -n "$(HOME=$H git config --get alias.lg
 ok "no personal strings in the kit"   '! grep -rIiE "oracle|@gmail|@outlook|youssef" "$KIT" --exclude-dir=.git --exclude-dir=tests'
 rm -rf "$H"
 
+echo "WSL: Windows folders leave PATH, chosen tools stay usable"
+H=$(mktemp -d); printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/fake.exe"; chmod +x "$H/fake.exe"
+out=$(WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c 'WSL_WIN_TOOLS=("mytool=$1"); . "$0"; echo "$PATH"; mytool 1' "$KIT/bashrc.d/05-wsl-path.sh" "$H/fake.exe" 2>&1)
+ok "no /mnt entries left on PATH"     '[[ $(head -1 <<<"$out") == /usr/bin:/bin ]]'
+ok "chosen tool still runs"           '[[ $(tail -1 <<<"$out") == "hello-from-win 1" ]]'
+out=$(unset WSL_DISTRO_NAME; PATH="/usr/bin:/mnt/c/Windows" bash -c '. "$0"; echo "$PATH"' "$KIT/bashrc.d/05-wsl-path.sh")
+ok "outside WSL, PATH is untouched"   '[[ $out == /usr/bin:/mnt/c/Windows ]]'
+rm -rf "$H"
+
 echo "the closing message"
 H=$(mktemp -d)   # a fresh user with no git identity
 out=$(HOME=$H bash "$KIT/install.sh" --no-apt --no-download 2>&1)
