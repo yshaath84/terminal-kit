@@ -1,0 +1,35 @@
+[alias]
+	st = status -sb
+	aa = add --all
+	cm = commit -m
+	co = checkout
+	br = branch -vv
+	p = push
+	pl = pull
+	lg = log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) %C(green)(%ar)%C(reset) %s %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
+	l = log --oneline -10
+	last = log -1 HEAD --stat
+	fresh = !git fetch --all --prune && git lg -20
+	hist = log --oneline --graph --all --decorate
+	unstage = reset HEAD --
+	undo = reset --soft HEAD~1
+	amend = commit --amend --no-edit
+	aliases = config --get-regexp alias
+	cleanup = !git branch --merged | grep -vE '^\\*|main|master|develop' | xargs -r -n1 git branch -d
+	si = "!git status -sb | sed 's/^##/BRANCH:/; s/^ M/MODIFIED:/; s/^A /ADDED:/; s/^??/UNTRACKED:/; s/^ D/DELETED:/'"
+[color]
+	ui = auto
+[column]
+	ui = auto
+[branch]
+	sort = -committerdate
+[diff]
+	colorMoved = default
+[merge]
+	conflictStyle = zdiff3
+[advice]
+	statusHints = false
+[color "status"]
+	added = green bold
+	changed = yellow bold
+	untracked = cyan bold

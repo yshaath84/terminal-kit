@@ -1,0 +1,72 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+add_newline = false
+command_timeout = 500
+format = "$username$hostname$directory$git_branch$git_status$line_break$character"
+right_format = "$status$cmd_duration${custom.runtimes}"
+
+[directory]
+style = "bold #7aa2f7"
+truncation_length = 3
+truncation_symbol = "…/"
+[git_branch]
+symbol = " "
+style = "bold #bb9af7"
+truncation_length = 18
+truncation_symbol = "…"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+format = "$conflicted$staged$modified$deleted$renamed$untracked$ahead_behind"
+staged = "[+${count} ](#9ece6a)"
+modified = "[~${count} ](#e0af68)"
+deleted = "[-${count} ](#f7768e)"
+renamed = "[»${count} ](#7dcfff)"
+untracked = "[?${count} ](#7dcfff)"
+conflicted = "[!${count} ](bold #f7768e)"
+ahead = "[⇡${count} ](#9ece6a)"
+behind = "[⇣${count} ](#e0af68)"
+diverged = "[⇕ ](bold #f7768e)"
+stashed = ""
+
+[php]
+disabled = true
+[nodejs]
+disabled = true
+
+[cmd_duration]
+min_time = 2000
+style = "#e0af68"
+format = "[󰔟 $duration]($style) "
+[status]
+disabled = false
+style = "bold #f7768e"
+format = "[✘ $status]($style) "
+[character]
+success_symbol = "[❯](bold #9ece6a)"
+error_symbol = "[❯](bold #f7768e)"
+
+[docker_context]
+disabled = true
+[python]
+disabled = true
+[package]
+disabled = true
+
+[username]
+show_always = true
+style_user = "bold #7dcfff"
+style_root = "bold #f7768e"
+format = "[$user]($style)"
+[hostname]
+# aliases = { "YOUR-LONG-HOSTNAME" = "wsl" }   # shorten the host name shown in the prompt
+ssh_only = false
+style = "bold #7dcfff"
+format = "[@$hostname]($style) "
+
+# php/node versions: shown ONCE when you enter a git repo (state kept per shell in /tmp)
+[custom.runtimes]
+shell = ["bash", "--noprofile", "--norc"]
+when = '''r=$(git rev-parse --show-toplevel 2>/dev/null); f=/tmp/.repo-seen-$_SHELL_PID; if [ -z "$r" ]; then rm -f "$f"; exit 1; fi; [ "$(cat "$f" 2>/dev/null)" = "$r" ] && exit 1; echo "$r" > "$f"'''
+command = '''out=""; command -v php >/dev/null && out="php v$(php -r 'echo PHP_VERSION;') "; command -v node >/dev/null && out="${out}node $(node -v)"; echo "$out"'''
+style = "#9d7cd8"
+format = "[$output]($style) "

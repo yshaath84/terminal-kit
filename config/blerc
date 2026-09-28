@@ -1,0 +1,23 @@
+# ble.sh: calmer, tidier completion (Tokyo Night)
+bleopt complete_auto_menu=500          # menu appears after 0.5s pause (was 100ms)
+bleopt complete_menu_style=desc        # one tidy column with descriptions
+bleopt complete_menu_maxlines=8        # never take over the screen
+bleopt complete_auto_complete=1        # inline grey suggestion from history
+
+ble-face auto_complete='fg=#7982a9'                 # readable grey-blue suggestion
+ble-face menu_filter_fixed='fg=#7aa2f7,bold'        # part you already typed
+ble-face menu_filter_input='fg=#f7768e,bold'        # part being matched
+ble-face menu_desc_default='fg=#a9b1d6'
+ble-face menu_desc_type='fg=#565f89'
+ble-face command_builtin='fg=#bb9af7'
+ble-face command_alias='fg=#7dcfff'
+ble-face command_function='fg=#7dcfff'
+ble-face command_file='fg=#9ece6a'
+ble-face command_keyword='fg=#bb9af7'
+ble-face filename_directory='fg=#7aa2f7,underline'
+ble-face argument_error='fg=#f7768e'
+
+# old prompts collapse to "❯ command" once you press Enter (also drop their right side)
+bleopt prompt_ps1_transient=trim            # old prompts collapse to just the ❯ line
+bleopt exec_errexit_mark=                   # no "[ble: exit 1]" line; the prompt already shows ✘
+bleopt prompt_rps1_transient=always
