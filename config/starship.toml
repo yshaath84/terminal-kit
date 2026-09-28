@@ -67,6 +67,6 @@ format = "[@$hostname]($style) "
 [custom.runtimes]
 shell = ["bash", "--noprofile", "--norc"]
 when = '''r=$(git rev-parse --show-toplevel 2>/dev/null); f=/tmp/.repo-seen-$_SHELL_PID; if [ -z "$r" ]; then rm -f "$f"; exit 1; fi; [ "$(cat "$f" 2>/dev/null)" = "$r" ] && exit 1; echo "$r" > "$f"'''
-command = '''out=""; command -v php >/dev/null && out="php v$(php -r 'echo PHP_VERSION;') "; command -v node >/dev/null && out="${out}node $(node -v)"; echo "$out"'''
+command = '''out=""; command -v php >/dev/null && out="php v$(php -n -r 'echo PHP_VERSION;') "; command -v node >/dev/null && out="${out}node $(node -v)"; echo "$out"'''
 style = "#9d7cd8"
 format = "[$output]($style) "
