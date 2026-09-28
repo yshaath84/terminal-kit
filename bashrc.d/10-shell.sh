@@ -7,7 +7,7 @@ _fd=$(command -v fdfind || command -v fd || true); _bat=$(command -v batcat || c
 HISTSIZE=50000; HISTFILESIZE=100000; HISTCONTROL=ignoreboth:erasedups
 shopt -s histappend cmdhist autocd cdspell globstar
 bind 'set completion-ignore-case on' 'set show-all-if-ambiguous on'
-bind '"\e[A": history-search-backward' '"\e[B": history-search-forward'
+[[ ${BLE_VERSION-} ]] || bind '"\e[A": history-search-backward' '"\e[B": history-search-forward'   # ble.sh has its own Up/Down
 command -v starship >/dev/null && eval "$(starship init bash)"
 command -v zoxide   >/dev/null && eval "$(zoxide init bash)"
 export FZF_DEFAULT_COMMAND="${_fd:-fd} --type f --hidden --exclude .git --exclude node_modules"
