@@ -34,4 +34,14 @@ ok "our git aliases work"             '[ -n "$(HOME=$H git config --get alias.lg
 ok "no personal strings in the kit"   '! grep -rIiE "oracle|@gmail|@outlook|youssef" "$KIT" --exclude-dir=.git --exclude-dir=tests'
 rm -rf "$H"
 
+echo "the closing message"
+H=$(mktemp -d)   # a fresh user with no git identity
+out=$(HOME=$H bash "$KIT/install.sh" --no-apt --no-download 2>&1)
+ok "prints the next steps"            '[[ $out == *"What to do next"* && $out == *"exec bash"* ]]'
+ok "asks for a git identity when missing" '[[ $out == *"Tell git who you are"* ]]'
+HOME=$H git config --global user.name X; HOME=$H git config --global user.email x@x
+out=$(HOME=$H bash "$KIT/install.sh" --no-apt --no-download 2>&1)
+ok "no identity nag once it is set"   '[[ $out != *"Tell git who you are"* ]]'
+rm -rf "$H"
+
 echo; echo "$pass passed, $fail failed"; [ "$fail" = 0 ]

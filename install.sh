@@ -81,4 +81,28 @@ RCEOF
   fi
 fi
 
-if [ $DRY = 1 ]; then say "dry run: nothing was changed"; else say "done. Run:  exec bash   (and set a Nerd Font in your terminal - see README)"; fi
+next_steps() {
+  local n=1 miss=() c
+  printf '\n\033[1;32m✔ Installed.\033[0m What to do next:\n\n'
+  printf '  %d. Reload your shell:      exec bash\n' $n; n=$((n+1))
+  if [ -d /mnt/c/Windows/Fonts ]; then   # WSL: can we see a Nerd Font on the Windows side?
+    if compgen -G "/mnt/c/Windows/Fonts/*Nerd*" >/dev/null || compgen -G "/mnt/c/Users/*/AppData/Local/Microsoft/Windows/Fonts/*Nerd*" >/dev/null; then
+      printf '  %d. Nerd Font found. In Windows Terminal → Settings → your Ubuntu profile → Appearance,\n     set Font face to your "... Nerd Font Mono" (otherwise icons show as boxes).\n' $n
+    else
+      printf '  %d. Install a Nerd Font on Windows (nerdfonts.com → JetBrainsMono), then set it in\n     Windows Terminal → Settings → your Ubuntu profile → Appearance → Font face.\n' $n
+    fi; n=$((n+1))
+  else
+    printf '  %d. Set a Nerd Font in your terminal emulator (nerdfonts.com), or icons show as boxes.\n' $n; n=$((n+1))
+  fi
+  if [ -z "$(git config --global user.name 2>/dev/null)" ] || [ -z "$(git config --global user.email 2>/dev/null)" ]; then
+    printf '  %d. Tell git who you are (needed for commits):\n       git config --global user.name  "Your Name"\n       git config --global user.email "you@example.com"\n' $n; n=$((n+1))
+  fi
+  printf '  %d. Try it:  menu   (every command in one list)   ·   proj   ·   git lg   ·   Ctrl-R\n' $n
+  command -v claude >/dev/null && printf '     ? how do I undo my last git commit      (asks Claude Code)\n'
+  for c in starship fzf zoxide eza tmux lazygit mc micro btop; do command -v "$c" >/dev/null || [ -x "$BIN/$c" ] || miss+=("$c"); done
+  { command -v fdfind || command -v fd; } >/dev/null || miss+=(fd)
+  { command -v batcat || command -v bat; } >/dev/null || miss+=(bat)
+  [ ${#miss[@]} -eq 0 ] || printf '\n  Not installed (skipped or unavailable): %s\n  The kit still works; those shortcuts just stay inactive until you install them.\n' "${miss[*]}"
+  printf '\n'
+}
+if [ $DRY = 1 ]; then say "dry run: nothing was changed"; else next_steps; fi
