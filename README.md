@@ -14,7 +14,8 @@ cd ~/terminal-kit && ./install.sh
 exec bash
 ```
 
-- Asks for your `sudo` password once (to `apt install` the tools). Use `./install.sh --no-apt` to skip apt.
+- See exactly what would change first: `./install.sh --dry-run` (prints every change, writes nothing).
+- Asks for your `sudo` password once (to `apt install` the tools). Use `--no-apt` to skip apt, `--no-download` to skip starship/delta/ble.sh.
 - Safe to run again. Your existing files are backed up as `*.bak.<time>`, never deleted.
 - Your git **name/email are never touched**. Set them yourself: `git config --global user.name "..."` and `user.email`.
 
@@ -54,6 +55,14 @@ Everything is plain files, symlinked from this folder, so `git pull` updates you
 - `config/gitconfig`, `config/gitconfig-delta` – git look and aliases
 
 Put your own `*.sh` files in `~/.bashrc.d/` and they load too.
+
+## Tests
+
+```bash
+bash tests/test-install.sh
+```
+
+Builds a throwaway home with an existing `.bashrc`, tmux/starship config and git identity, installs twice, and checks that nothing of theirs was lost, everything was backed up, and `--dry-run` wrote nothing. Runs in CI on every push.
 
 ## Uninstall
 
