@@ -8,6 +8,8 @@
 #   notify    Windows toast when a command takes long (WSL only)
 #   winpath   keep Windows folders off PATH so Tab completion stays fast (WSL only)
 #   nvm       load nvm only when you first type `nvm` (saves ~2 s per new shell)
+#   ble       live completion while you type (ble.sh). Off = shells start in ~0.1 s instead of ~1.5 s,
+#             but no live menu, grey suggestions, collapsing prompt or Windows toasts. Keep TK_DISABLE on one line.
 # TK_DISABLE=(laravel copilot)
 
 # Name used in the greeting (default: your login name).
