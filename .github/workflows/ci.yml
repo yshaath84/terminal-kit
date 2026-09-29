@@ -6,7 +6,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Lint (shellcheck, warnings and errors)
         run: shellcheck --version && shellcheck -s bash -S warning install.sh loader.sh ble-early.sh bashrc.d/*.sh tests/*.sh
       - name: Installer safety tests
