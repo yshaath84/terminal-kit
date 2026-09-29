@@ -47,10 +47,19 @@ elif [ $DL = 1 ]; then
     if [ -n "$url" ] && curl -fsSL "$url" | tar xz -C "$tmp"; then install -m755 "$tmp"/delta-*/delta "$BIN/delta"; else echo "  skip  delta (download failed)"; fi
     rm -rf "$tmp"
   fi
-  if [ ! -r "$HOME/.local/share/blesh/ble.sh" ]; then
-    say "installing ble.sh (live completion while you type)"
+  # ble.sh is pinned to a commit tested with config/blerc: it handles every keypress, so an untested
+  # upstream change could break typing. To move the pin: test a new commit, then change BLE_REF.
+  BLE_REF=d81fd54feb0d996fdff20dca27eaf0201f7015cc
+  BLE_STAMP=$HOME/.local/share/blesh/.terminal-kit-ref
+  if [ "$(cat "$BLE_STAMP" 2>/dev/null)" != "$BLE_REF" ]; then
+    say "installing ble.sh ${BLE_REF:0:7} (live completion while you type)"
     tmp=$(mktemp -d)
-    if git clone -q --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$tmp/ble" && make -s -C "$tmp/ble" install PREFIX="$HOME/.local" >/dev/null; then :; else echo "  skip  ble.sh (build failed)"; fi
+    # a named remote is needed: the contrib submodule URL is relative to it
+    if git -C "$tmp" init -q && git -C "$tmp" remote add origin https://github.com/akinomyoga/ble.sh.git \
+       && git -C "$tmp" fetch -q --depth 1 origin "$BLE_REF" \
+       && git -C "$tmp" checkout -q FETCH_HEAD && git -C "$tmp" submodule -q update --init --depth 1 \
+       && make -s -C "$tmp" install PREFIX="$HOME/.local" >/dev/null; then echo "$BLE_REF" > "$BLE_STAMP"
+    else echo "  skip  ble.sh (build failed)"; fi
     rm -rf "$tmp"
   fi
 fi
