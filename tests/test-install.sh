@@ -57,11 +57,13 @@ ok "menu hides disabled commands"     '[[ $out == *"newnode"* && $out != *" art 
 ok "greeting uses TK_NAME"            '[[ $out == *"Hi Sam"* ]]'
 rm -rf "$H"
 
-echo "WSL: Windows folders leave PATH, chosen tools stay usable"
-H=$(mktemp -d); printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/fake.exe"; chmod +x "$H/fake.exe"
-out=$(WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c 'WSL_WIN_TOOLS=("mytool=$1"); . "$0"; echo "$PATH"; mytool 1' "$SRC/bashrc.d/05-winpath.sh" "$H/fake.exe" 2>&1)
-ok "no /mnt entries left on PATH"     '[[ $(head -1 <<<"$out") == /usr/bin:/bin ]]'
-ok "chosen tool still runs"           '[[ $(tail -1 <<<"$out") == "hello-from-win 1" ]]'
+echo "WSL: Windows folders leave PATH, Windows tools stay usable"
+H=$(mktemp -d); mkdir -p "$H/Users/bob"; printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/Users/bob/tool.exe"; chmod +x "$H/Users/bob/tool.exe"
+wp() { WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c "WSL_WIN_TOOLS=(\"mytool=$H/Users/*/tool.exe\" \"gone=$H/nope.exe\"); . $SRC/bashrc.d/05-winpath.sh; $1" 2>&1; }
+ok "no /mnt entries left on PATH"     '[[ $(wp "echo \$PATH") == /usr/bin:/bin ]]'
+ok "own tool runs, found by glob"     '[[ $(wp "mytool 1 \"a b\"") == "hello-from-win 1 a b" ]]'
+ok "VS Code gets a code command"      '[[ $(wp "type -t code") == function ]]'
+ok "missing tool says so, exit 127"   '[[ $(wp "gone; echo rc=\$?") == *"not found on Windows"*"rc=127" ]]'
 out=$(unset WSL_DISTRO_NAME; PATH="/usr/bin:/mnt/c/Windows" bash -c '. "$0"; echo "$PATH"' "$SRC/bashrc.d/05-winpath.sh")
 ok "outside WSL, PATH is untouched"   '[[ $out == /usr/bin:/mnt/c/Windows ]]'
 rm -rf "$H"
