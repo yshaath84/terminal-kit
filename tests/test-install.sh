@@ -45,12 +45,24 @@ ok "our git aliases work"             '[ -n "$(HOME=$H git config --get alias.lg
 ok "no personal strings in the kit"   '! grep -rIiE "oracle|@gmail|@outlook|youssef" "$SRC" --exclude-dir=.git --exclude-dir=tests'
 rm -rf "$H"
 
+echo "your settings"
+newhome; inst
+ok "config.sh created from template"  'cmp -s "$KIT/config/config.template.sh" "$H/.config/terminal-kit/config.sh"'
+echo 'TK_DISABLE=(laravel smartcd); TK_NAME=Sam; alias mine=1' >> "$H/.config/terminal-kit/config.sh"
+inst
+ok "config.sh never overwritten"      'grep -q "TK_NAME=Sam" "$H/.config/terminal-kit/config.sh"'
+out=$(cd "$H" && HOME=$H bash -ic 'echo "@art=$(type -t art) cd=$(type -t cd) newnode=$(type -t newnode) mine=$(type -t mine)"; _menu_items | cut -d"|" -f1 | tr "\n" " "' 2>/dev/null)
+ok "disabled modules don't load"      '[[ $out == *"@art= cd=builtin newnode=function mine=alias"* ]]'
+ok "menu hides disabled commands"     '[[ $out == *"newnode"* && $out != *" art "* && $out != *"newlaravel"* ]]'
+ok "greeting uses TK_NAME"            '[[ $out == *"Hi Sam"* ]]'
+rm -rf "$H"
+
 echo "WSL: Windows folders leave PATH, chosen tools stay usable"
 H=$(mktemp -d); printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/fake.exe"; chmod +x "$H/fake.exe"
-out=$(WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c 'WSL_WIN_TOOLS=("mytool=$1"); . "$0"; echo "$PATH"; mytool 1' "$SRC/bashrc.d/05-wsl-path.sh" "$H/fake.exe" 2>&1)
+out=$(WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c 'WSL_WIN_TOOLS=("mytool=$1"); . "$0"; echo "$PATH"; mytool 1' "$SRC/bashrc.d/05-winpath.sh" "$H/fake.exe" 2>&1)
 ok "no /mnt entries left on PATH"     '[[ $(head -1 <<<"$out") == /usr/bin:/bin ]]'
 ok "chosen tool still runs"           '[[ $(tail -1 <<<"$out") == "hello-from-win 1" ]]'
-out=$(unset WSL_DISTRO_NAME; PATH="/usr/bin:/mnt/c/Windows" bash -c '. "$0"; echo "$PATH"' "$SRC/bashrc.d/05-wsl-path.sh")
+out=$(unset WSL_DISTRO_NAME; PATH="/usr/bin:/mnt/c/Windows" bash -c '. "$0"; echo "$PATH"' "$SRC/bashrc.d/05-winpath.sh")
 ok "outside WSL, PATH is untouched"   '[[ $out == /usr/bin:/mnt/c/Windows ]]'
 rm -rf "$H"
 

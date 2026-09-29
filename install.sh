@@ -60,6 +60,10 @@ link "$KIT/config/starship.toml" "$HOME/.config/starship.toml"
 link "$KIT/config/blerc"         "$HOME/.blerc"
 link "$KIT/config/tmux.conf"     "$HOME/.tmux.conf"
 
+# your personal settings file: created once from the template, never overwritten
+CONF=$HOME/.config/terminal-kit/config.sh
+if [ ! -e "$CONF" ]; then say "creating $CONF (your settings)"; run mkdir -p "${CONF%/*}"; run cp "$KIT/config/config.template.sh" "$CONF"; fi
+
 # git: include our aliases/colors; add the delta look only if delta exists. Your name/email are never touched.
 include() { git config --global --get-all include.path 2>/dev/null | grep -qxF "$1" || run git config --global --add include.path "$1"; }
 include "$KIT/config/gitconfig"
@@ -101,6 +105,7 @@ next_steps() {
   if [ -z "$(git config --global user.name 2>/dev/null)" ] || [ -z "$(git config --global user.email 2>/dev/null)" ]; then
     printf '  %d. Tell git who you are (needed for commits):\n       git config --global user.name  "Your Name"\n       git config --global user.email "you@example.com"\n' $n; n=$((n+1))
   fi
+  printf '  %d. Your settings (turn modules off, set your name): ~/.config/terminal-kit/config.sh\n' $n; n=$((n+1))
   printf '  %d. Try it:  menu   (every command in one list)   ·   proj   ·   git lg   ·   Ctrl-R\n' $n
   command -v claude >/dev/null && printf '     ? how do I undo my last git commit      (asks Claude Code)\n'
   for c in starship fzf zoxide eza tmux lazygit mc micro btop; do command -v "$c" >/dev/null || [ -x "$BIN/$c" ] || miss+=("$c"); done
