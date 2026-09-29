@@ -96,6 +96,29 @@ out=$(cd "$H" && HOME=$H bash -ic hello 2>/dev/null)
 ok "new module is live, no re-link"   '[[ $out == *hi-from-new-module* ]]'
 rm -rf "$H"
 
+echo "uninstall puts everything back"
+newhome; mkdir -p "$H/.config" "$H/.nvm"; echo : > "$H/.nvm/nvm.sh"
+printf '# mine\nalias mine=1\nexport NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh"\n' > "$H/.bashrc"
+echo 'set -g prefix C-a' > "$H/.tmux.conf"; echo 'add_newline = true' > "$H/.config/starship.toml"
+cp "$H/.bashrc" "$H/orig.bashrc"; HOME=$H git config --global user.name Friend
+inst; inst
+before=$(ls -A "$H"; ls -A "$H/.config")
+inst --uninstall --dry-run
+ok "--uninstall --dry-run changes nothing" '[ "$(ls -A "$H"; ls -A "$H/.config")" = "$before" ] && grep -q terminal-kit:loader "$H/.bashrc"'
+inst --uninstall
+ok ".bashrc back to the original"     'diff <(grep -v "^$" "$H/orig.bashrc") <(grep -v "^$" "$H/.bashrc") >/dev/null'
+ok "their tmux.conf restored"         '[ ! -L "$H/.tmux.conf" ] && grep -qx "set -g prefix C-a" "$H/.tmux.conf"'
+ok "their starship.toml restored"     '[ ! -L "$H/.config/starship.toml" ] && grep -qx "add_newline = true" "$H/.config/starship.toml"'
+ok "our blerc link removed"           '[ ! -e "$H/.blerc" ]'
+ok "git includes removed"             '! HOME=$H git config --global --get-all include.path'
+ok "git identity kept"                '[ "$(HOME=$H git config --global user.name)" = Friend ]'
+ok "their config.sh kept"             '[ -f "$H/.config/terminal-kit/config.sh" ]'
+out=$(cd "$H" && HOME=$H bash -ic 'type -t menu; alias mine' 2>/dev/null)
+ok "shell works without the kit"      '[[ $out != *function* && $out == *"alias mine="* ]]'
+inst
+ok "reinstall after uninstall works"  '[ "$(grep -c terminal-kit:loader "$H/.bashrc")" = 1 ]'
+rm -rf "$H"
+
 echo "WSL: Windows folders leave PATH, Windows tools stay usable"
 H=$(mktemp -d); mkdir -p "$H/Users/bob"; printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/Users/bob/tool.exe"; chmod +x "$H/Users/bob/tool.exe"
 wp() { WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c "WSL_WIN_TOOLS=(\"mytool=$H/Users/*/tool.exe\" \"gone=$H/nope.exe\"); . $SRC/bashrc.d/05-winpath.sh; $1" 2>&1; }

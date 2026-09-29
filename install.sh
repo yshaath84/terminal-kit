@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # terminal-kit installer. Safe to run twice.
-# Flags: --dry-run (print every change, write nothing)  --no-apt (skip apt)  --no-download (skip starship/delta/ble.sh)
+# Flags: --dry-run (print every change, write nothing)  --uninstall (undo everything install did)  --no-apt (skip apt)  --no-download (skip starship/delta/ble.sh)
 set -euo pipefail
 KIT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 if ! [ "$KIT" -ef "$HOME/.terminal-kit" ]; then
@@ -9,11 +9,34 @@ if ! [ "$KIT" -ef "$HOME/.terminal-kit" ]; then
   exit 1
 fi
 KIT=$HOME/.terminal-kit
-BIN=$HOME/.local/bin; APT=1; DL=1; DRY=0
-for a in "$@"; do case $a in --no-apt) APT=0;; --no-download) DL=0;; --dry-run) DRY=1;; *) echo "unknown flag: $a" >&2; exit 1;; esac; done
+BIN=$HOME/.local/bin; APT=1; DL=1; DRY=0; UNINSTALL=0
+for a in "$@"; do case $a in --no-apt) APT=0;; --no-download) DL=0;; --dry-run) DRY=1;; --uninstall) UNINSTALL=1;; *) echo "unknown flag: $a" >&2; exit 1;; esac; done
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 # run <cmd...>: execute, or just print it under --dry-run
 run() { if [ $DRY = 1 ]; then echo "  would: $*"; else "$@"; fi; }
+# --uninstall: undo exactly what install did. Keeps your config.sh, the downloaded tools and ~/.terminal-kit.
+if [ $UNINSTALL = 1 ]; then
+  say "uninstalling terminal-kit"
+  for d in "$HOME/.config/starship.toml" "$HOME/.blerc" "$HOME/.tmux.conf"; do
+    [ -L "$d" ] && [[ $(readlink "$d") == "$KIT"/* ]] || continue
+    run rm "$d"
+    b=$(printf '%s\n' "$d".bak.* | sort -V | tail -1)          # the newest backup install made
+    if [ -e "$b" ]; then run mv "$b" "$d"; say "restored $d"; fi
+  done
+  RC=$HOME/.bashrc
+  if grep -qs 'terminal-kit:' "$RC"; then
+    run cp "$RC" "$RC.bak.$(date +%s)"
+    run sed -i -e '/^# terminal-kit:ble/,+1d' -e '/^# terminal-kit:loader/,+1d' -e 's/^# terminal-kit:nvm-off //' "$RC"
+    say "removed the terminal-kit lines from ~/.bashrc (nvm lines restored)"
+  fi
+  git config --global --get-all include.path 2>/dev/null | grep -F "$KIT/" | while IFS= read -r i; do
+    run git config --global --fixed-value --unset include.path "$i"
+  done
+  say "done. Kept: ~/.config/terminal-kit/config.sh, tools in ~/.local, and ~/.terminal-kit (delete it when you like)."
+  [ $DRY = 1 ] || say "Run:  exec bash"
+  exit 0
+fi
+
 run mkdir -p "$BIN" "$HOME/.config"
 
 # link <src> <dst>: symlink; anything already there (not our link) is moved to <dst>.bak.<time>
