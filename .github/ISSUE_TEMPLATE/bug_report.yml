@@ -1,0 +1,31 @@
+name: Bug report
+description: Something in terminal-kit doesn't work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you saw instead. Paste any error text.
+    validations:
+      required: true
+  - type: textarea
+    id: dryrun
+    attributes:
+      label: Output of `~/.terminal-kit/install.sh --dry-run`
+      render: text
+  - type: textarea
+    id: env
+    attributes:
+      label: Your system
+      description: Paste the output of the command below.
+      value: |
+        Run: wsl.exe --version; grep PRETTY /etc/os-release; bash --version | head -1; git -C ~/.terminal-kit log --oneline -1
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: disabled
+    attributes:
+      label: Your TK_DISABLE line, if any
+      description: From ~/.config/terminal-kit/config.sh

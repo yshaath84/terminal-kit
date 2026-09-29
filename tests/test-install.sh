@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034  # variables like $out/$err are read inside the strings that ok() evals
 # Proves install.sh never damages what a user already has. Uses a throwaway HOME; no network, no sudo.
 set -uo pipefail
 SRC=$(cd "$(dirname "$0")/.." && pwd); pass=0; fail=0

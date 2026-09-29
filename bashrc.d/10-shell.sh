@@ -18,7 +18,9 @@ export FZF_CTRL_T_OPTS="--preview '${_bat:-cat} --color=always --style=numbers -
 export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --icons --color=always {}'"
 command -v fzf      >/dev/null && eval "$(fzf --bash 2>/dev/null)"
 command -v eza      >/dev/null && alias ls='eza --icons --group-directories-first' ll='eza -lah --git --icons'
+# shellcheck disable=SC2139  # resolve the real name (batcat/fdfind) once, on purpose
 [ -n "$_bat" ] && alias bat="$_bat"
+# shellcheck disable=SC2139
 [ -n "$_fd" ] && alias fd="$_fd"
 alias gs='git status -sb' gl='git log --oneline --graph -20' ..='cd ..'
 # --- end dev UX ---

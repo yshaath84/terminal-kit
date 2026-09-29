@@ -2,7 +2,7 @@
 # newnode myapp: create a Node project in ~/code with a watch-mode 'dev' script, git init, cd into it
 newnode() {
   [ -n "$1" ] || { echo "usage: newnode <name>" >&2; return 1; }
-  [ -e ~/code/"$1" ] && { echo "~/code/$1 already exists" >&2; return 1; }
+  [ -e ~/code/"$1" ] && { echo "$HOME/code/$1 already exists" >&2; return 1; }
   mkdir -p ~/code/"$1" && cd ~/code/"$1" || return 1
   npm init -y >/dev/null && npm pkg set scripts.dev="node --watch index.js" main=index.js >/dev/null
   echo 'console.log("hello from '"$1"'");' > index.js

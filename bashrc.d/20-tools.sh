@@ -1,8 +1,8 @@
 # small tools: mkcd, proj, dev, killport, gclean, TUI shortcuts, cls, work (tmux)
 # --- dev functions ---
-mkcd() { mkdir -p "$1" && cd "$1"; }
+mkcd() { mkdir -p "$1" && cd "$1" || return; }
 # proj: fzf-pick a git repo under ~ (depth 3) and cd into it
-proj() { local d; d=$(${_fd:-fd} -H -t d '^\.git$' ~ -d 3 -E .nvm -E .cache | sed 's|/\.git/\?$||' | fzf --query="$1" -1) && cd "$d"; }
+proj() { local d; d=$(${_fd:-fd} -H -t d '^\.git$' ~ -d 3 -E .nvm -E .cache | sed 's|/\.git/\?$||' | fzf --query="$1" -1) && cd "$d" || return; }
 # dev: start the project's dev server (Laravel composer script, else npm)
 dev() {
   if [ -f artisan ] && grep -q '"dev"' composer.json 2>/dev/null; then composer run dev
