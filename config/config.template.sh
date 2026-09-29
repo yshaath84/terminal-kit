@@ -7,6 +7,7 @@
 #   smartcd   `cd name` jumps to a folder you visited before when it isn't here
 #   notify    Windows toast when a command takes long (WSL only)
 #   winpath   keep Windows folders off PATH so Tab completion stays fast (WSL only)
+#   nvm       load nvm only when you first type `nvm` (saves ~2 s per new shell)
 # TK_DISABLE=(laravel copilot)
 
 # Name used in the greeting (default: your login name).

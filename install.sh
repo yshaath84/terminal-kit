@@ -89,6 +89,22 @@ RCEOF
   fi
 fi
 
+# nvm: comment out the eager nvm lines so bashrc.d/70-nvm.sh can load it lazily (or restore them if
+# you switched that module off). Lines are tagged, so --uninstall can put them back exactly.
+NVM_RE='^[[:space:]]*[^#[:space:]].*(\.|source)[[:space:]].*(nvm\.sh|/bash_completion)'
+nvm_off=0; [ -r "$CONF" ] && (. "$CONF" >/dev/null 2>&1; [[ " ${TK_DISABLE[*]-} " == *" nvm "* ]]) && nvm_off=1
+if [ -f "$RC" ] && [ $nvm_off = 0 ] && grep -Eq "$NVM_RE" "$RC" && grep -Eq "$NVM_RE" <(grep -i nvm "$RC"); then
+  if [ $DRY = 1 ]; then echo "  would: comment out the nvm lines in $RC (nvm then loads on first use)"; else
+  cp "$RC" "$RC.bak.$(date +%s)"
+  RE=$NVM_RE awk 'tolower($0) ~ /nvm/ && $0 ~ ENVIRON["RE"] { print "# terminal-kit:nvm-off " $0; next } { print }' "$RC" > "$RC.new" && mv "$RC.new" "$RC"
+  say "nvm now loads on first use (its lines in ~/.bashrc are commented out, tagged terminal-kit:nvm-off)"
+  fi
+elif [ $nvm_off = 1 ] && grep -q '^# terminal-kit:nvm-off ' "$RC" 2>/dev/null; then
+  if [ $DRY = 1 ]; then echo "  would: restore the nvm lines in $RC"; else
+  sed -i 's/^# terminal-kit:nvm-off //' "$RC"; say "restored your nvm lines in ~/.bashrc"
+  fi
+fi
+
 next_steps() {
   local n=1 miss=() c
   printf '\n\033[1;32m✔ Installed.\033[0m What to do next:\n\n'

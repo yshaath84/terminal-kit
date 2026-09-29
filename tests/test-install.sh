@@ -57,6 +57,26 @@ ok "menu hides disabled commands"     '[[ $out == *"newnode"* && $out != *" art 
 ok "greeting uses TK_NAME"            '[[ $out == *"Hi Sam"* ]]'
 rm -rf "$H"
 
+echo "nvm loads on first use"
+newhome; mkdir -p "$H/.nvm/alias" "$H/.nvm/versions/node/v20.1.0/bin" "$H/.nvm/versions/node/v22.0.0/bin"
+echo 'nvm() { echo real-nvm "$@"; }' > "$H/.nvm/nvm.sh"; echo v20.1.0 > "$H/.nvm/alias/default"
+cat > "$H/.bashrc" <<'RC'
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# my notes about nvm.sh stay as they are
+RC
+err=$(HOME=$H bash "$KIT/install.sh" --no-apt --no-download 2>&1 >/dev/null); inst
+ok "install prints no warnings"       '[ -z "$err" ]'
+ok "both nvm lines commented, once"   '[ "$(grep -c "^# terminal-kit:nvm-off \[ -s" "$H/.bashrc")" = 2 ]'
+ok "other lines untouched"            'grep -qx "export NVM_DIR=\"\$HOME/.nvm\"" "$H/.bashrc" && grep -qx "# my notes about nvm.sh stay as they are" "$H/.bashrc"'
+out=$(cd "$H" && HOME=$H bash -ic 'echo "@path=${PATH%%:*}"; nvm ls' 2>/dev/null)
+ok "default node is first on PATH"    '[[ $out == *"@path=$H/.nvm/versions/node/v20.1.0/bin"* ]]'
+ok "nvm itself loads when first used" '[[ $out == *"real-nvm ls"* ]]'
+echo 'TK_DISABLE=(nvm)' >> "$H/.config/terminal-kit/config.sh"; inst
+ok "disabling nvm restores the lines" '! grep -q terminal-kit:nvm-off "$H/.bashrc" && grep -qx "\[ -s \"\$NVM_DIR/nvm.sh\" \] && \\\\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm" "$H/.bashrc"'
+rm -rf "$H"
+
 echo "WSL: Windows folders leave PATH, Windows tools stay usable"
 H=$(mktemp -d); mkdir -p "$H/Users/bob"; printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/Users/bob/tool.exe"; chmod +x "$H/Users/bob/tool.exe"
 wp() { WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c "WSL_WIN_TOOLS=(\"mytool=$H/Users/*/tool.exe\" \"gone=$H/nope.exe\"); . $SRC/bashrc.d/05-winpath.sh; $1" 2>&1; }
