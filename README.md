@@ -101,6 +101,10 @@ bash ~/.terminal-kit/tests/test-install.sh
 
 The script builds throwaway homes with an existing `.bashrc`, tmux/starship config, nvm and git identity, then runs install, update and uninstall. It checks that nothing of theirs is lost and that everything is backed up and comes back unchanged. CI runs it on every push.
 
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems privately, see [SECURITY.md](SECURITY.md).
+
 ## License
 
 MIT, see [LICENSE](LICENSE). The CLI tools are the work of their authors; terminal-kit only wires them together.
