@@ -103,12 +103,17 @@ include "$KIT/config/gitconfig"
 
 # ~/.bashrc: two small marked blocks (ble.sh must load first and attach last)
 RC=$HOME/.bashrc; [ $DRY = 1 ] || touch "$RC"
+BLE_LINE='[[ -r ~/.terminal-kit/ble-early.sh ]] && . ~/.terminal-kit/ble-early.sh'
 if ! grep -qs 'terminal-kit:ble' "$RC"; then
   if [ $DRY = 1 ]; then echo "  would: back up $RC and add the ble.sh line at its top"; else
   cp "$RC" "$RC.bak.$(date +%s)"
-  { printf '%s\n' '# terminal-kit:ble  (load ble.sh first; it is attached at the end of this file)' \
-                  '[[ $- == *i* && -r ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach' ''; cat "$RC"; } > "$RC.new"
+  { printf '%s\n' '# terminal-kit:ble  (load ble.sh first; it is attached at the end of this file)' "$BLE_LINE" ''; cat "$RC"; } > "$RC.new"
   mv "$RC.new" "$RC"
+  fi
+elif [ "$(grep -A1 '^# terminal-kit:ble' "$RC" | sed -n 2p)" != "$BLE_LINE" ]; then   # older install: upgrade the line
+  if [ $DRY = 1 ]; then echo "  would: update the ble.sh line in $RC"; else
+  cp "$RC" "$RC.bak.$(date +%s)"
+  L=$BLE_LINE awk '/^# terminal-kit:ble/ { print; getline; print ENVIRON["L"]; next } { print }' "$RC" > "$RC.new" && mv "$RC.new" "$RC"
   fi
 fi
 if ! grep -qs 'terminal-kit:loader' "$RC"; then

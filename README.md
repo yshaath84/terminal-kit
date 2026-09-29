@@ -56,14 +56,20 @@ Also:
 the kit in every shell, and never changed by the installer or `kit-update`. In it you can:
 
 ```bash
-TK_DISABLE=(laravel copilot)   # switch modules off: laravel copilot smartcd notify winpath nvm ...
+TK_DISABLE=(laravel copilot)   # switch modules off: laravel copilot smartcd notify winpath nvm ble ... (one line)
 TK_NAME="Sam"                  # name in the greeting
 NOTIFY_AFTER=60                # seconds before a Windows toast
 WSL_WIN_TOOLS=("mytool=/mnt/c/tools/mytool.exe")   # more Windows programs to keep runnable
 alias ll='ls -la'              # anything else you want in every shell
 ```
 
-Module names are the files in `bashrc.d/` without the number (`41-laravel.sh` → `laravel`).
+Module names are the files in `bashrc.d/` without the number (`41-laravel.sh` → `laravel`), plus `ble`.
+
+**Faster start, less magic:** `TK_DISABLE=(ble)` switches off ble.sh. New shells are then ready in about 0.2 s instead of 1.5 s. Tab completion, fzf and every command still work, but these stop:
+- the live menu while you type
+- the grey suggestions
+- the collapsing old prompts
+- Windows toasts
 
 To change the kit itself, don't edit files in `~/.terminal-kit`: `kit-update` stops if you do. Put it in `config.sh`, or send a pull request.
 

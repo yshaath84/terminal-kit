@@ -8,7 +8,7 @@ newhome() { H=$(mktemp -d); cp -r "$SRC" "$H/.terminal-kit"; KIT=$H/.terminal-ki
 inst() { HOME=$H bash "$KIT/install.sh" --no-apt --no-download "$@" >/dev/null 2>&1; }
 
 echo "syntax"
-for f in "$SRC"/install.sh "$SRC"/loader.sh "$SRC"/bashrc.d/*.sh; do ok "bash -n ${f#$SRC/}" 'bash -n "$f"'; done
+for f in "$SRC"/install.sh "$SRC"/loader.sh "$SRC"/ble-early.sh "$SRC"/bashrc.d/*.sh; do ok "bash -n ${f#$SRC/}" 'bash -n "$f"'; done
 
 echo "location"
 H=$(mktemp -d)
@@ -117,6 +117,22 @@ out=$(cd "$H" && HOME=$H bash -ic 'type -t menu; alias mine' 2>/dev/null)
 ok "shell works without the kit"      '[[ $out != *function* && $out == *"alias mine="* ]]'
 inst
 ok "reinstall after uninstall works"  '[ "$(grep -c terminal-kit:loader "$H/.bashrc")" = 1 ]'
+rm -rf "$H"
+
+echo "ble.sh can be switched off"
+newhome; mkdir -p "$H/.local/share/blesh"; echo 'BLE_FAKE=loaded' > "$H/.local/share/blesh/ble.sh"
+inst
+blecheck() { (cd "$H" && HOME=$H bash -ic 'echo "@ble=${BLE_FAKE-} art=$(type -t art)"' 2>/dev/null | grep -a '^@'); }
+ok "ble.sh loads by default"          '[[ $(blecheck) == "@ble=loaded art=function" ]]'
+echo '# TK_DISABLE=(ble)' >> "$H/.config/terminal-kit/config.sh"
+ok "a commented switch does nothing"  '[[ $(blecheck) == "@ble=loaded"* ]]'
+echo 'TK_DISABLE=(laravel ble)' >> "$H/.config/terminal-kit/config.sh"
+ok "TK_DISABLE=(... ble) skips it"    '[[ $(blecheck) == "@ble= art=" ]]'
+rm -rf "$H"
+newhome; printf '%s\n' '# terminal-kit:ble  (load ble.sh first; it is attached at the end of this file)' \
+  '[[ $- == *i* && -r ~/.local/share/blesh/ble.sh ]] && source ~/.local/share/blesh/ble.sh --noattach' '' '# mine' > "$H/.bashrc"
+inst; inst
+ok "older ble line upgraded, once"    '[ "$(grep -c terminal-kit:ble "$H/.bashrc")" = 1 ] && grep -q "ble-early.sh" "$H/.bashrc" && ! grep -q "blesh/ble.sh --noattach" "$H/.bashrc" && grep -qx "# mine" "$H/.bashrc"'
 rm -rf "$H"
 
 echo "WSL: Windows folders leave PATH, Windows tools stay usable"
