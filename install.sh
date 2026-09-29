@@ -1,14 +1,43 @@
 #!/usr/bin/env bash
 # terminal-kit installer. Safe to run twice.
-# Flags: --dry-run (print every change, write nothing)  --no-apt (skip apt)  --no-download (skip starship/delta/ble.sh)
+# Flags: --dry-run (print every change, write nothing)  --uninstall (undo everything install did)  --no-apt (skip apt)  --no-download (skip starship/delta/ble.sh)
 set -euo pipefail
 KIT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-BIN=$HOME/.local/bin; APT=1; DL=1; DRY=0
-for a in "$@"; do case $a in --no-apt) APT=0;; --no-download) DL=0;; --dry-run) DRY=1;; *) echo "unknown flag: $a" >&2; exit 1;; esac; done
+if ! [ "$KIT" -ef "$HOME/.terminal-kit" ]; then
+  echo "terminal-kit must live in ~/.terminal-kit (it is in $KIT). Clone it there:" >&2
+  echo "  git clone https://github.com/yshaath84/terminal-kit ~/.terminal-kit && ~/.terminal-kit/install.sh" >&2
+  exit 1
+fi
+KIT=$HOME/.terminal-kit
+BIN=$HOME/.local/bin; APT=1; DL=1; DRY=0; UNINSTALL=0
+for a in "$@"; do case $a in --no-apt) APT=0;; --no-download) DL=0;; --dry-run) DRY=1;; --uninstall) UNINSTALL=1;; *) echo "unknown flag: $a" >&2; exit 1;; esac; done
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 # run <cmd...>: execute, or just print it under --dry-run
 run() { if [ $DRY = 1 ]; then echo "  would: $*"; else "$@"; fi; }
-run mkdir -p "$BIN" "$HOME/.config" "$HOME/.bashrc.d"
+# --uninstall: undo exactly what install did. Keeps your config.sh, the downloaded tools and ~/.terminal-kit.
+if [ $UNINSTALL = 1 ]; then
+  say "uninstalling terminal-kit"
+  for d in "$HOME/.config/starship.toml" "$HOME/.blerc" "$HOME/.tmux.conf"; do
+    [ -L "$d" ] && [[ $(readlink "$d") == "$KIT"/* ]] || continue
+    run rm "$d"
+    b=$(printf '%s\n' "$d".bak.* | sort -V | tail -1)          # the newest backup install made
+    if [ -e "$b" ]; then run mv "$b" "$d"; say "restored $d"; fi
+  done
+  RC=$HOME/.bashrc
+  if grep -qs 'terminal-kit:' "$RC"; then
+    run cp "$RC" "$RC.bak.$(date +%s)"
+    run sed -i -e '/^# terminal-kit:ble/,+1d' -e '/^# terminal-kit:loader/,+1d' -e 's/^# terminal-kit:nvm-off //' "$RC"
+    say "removed the terminal-kit lines from ~/.bashrc (nvm lines restored)"
+  fi
+  git config --global --get-all include.path 2>/dev/null | grep -F "$KIT/" | while IFS= read -r i; do
+    run git config --global --fixed-value --unset include.path "$i"
+  done
+  say "done. Kept: ~/.config/terminal-kit/config.sh, tools in ~/.local, and ~/.terminal-kit (delete it when you like)."
+  [ $DRY = 1 ] || say "Run:  exec bash"
+  exit 0
+fi
+
+run mkdir -p "$BIN" "$HOME/.config"
 
 # link <src> <dst>: symlink; anything already there (not our link) is moved to <dst>.bak.<time>
 link() {
@@ -41,19 +70,31 @@ elif [ $DL = 1 ]; then
     if [ -n "$url" ] && curl -fsSL "$url" | tar xz -C "$tmp"; then install -m755 "$tmp"/delta-*/delta "$BIN/delta"; else echo "  skip  delta (download failed)"; fi
     rm -rf "$tmp"
   fi
-  if [ ! -r "$HOME/.local/share/blesh/ble.sh" ]; then
-    say "installing ble.sh (live completion while you type)"
+  # ble.sh is pinned to a commit tested with config/blerc: it handles every keypress, so an untested
+  # upstream change could break typing. To move the pin: test a new commit, then change BLE_REF.
+  BLE_REF=d81fd54feb0d996fdff20dca27eaf0201f7015cc
+  BLE_STAMP=$HOME/.local/share/blesh/.terminal-kit-ref
+  if [ "$(cat "$BLE_STAMP" 2>/dev/null)" != "$BLE_REF" ]; then
+    say "installing ble.sh ${BLE_REF:0:7} (live completion while you type)"
     tmp=$(mktemp -d)
-    if git clone -q --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git "$tmp/ble" && make -s -C "$tmp/ble" install PREFIX="$HOME/.local" >/dev/null; then :; else echo "  skip  ble.sh (build failed)"; fi
+    # a named remote is needed: the contrib submodule URL is relative to it
+    if git -C "$tmp" init -q && git -C "$tmp" remote add origin https://github.com/akinomyoga/ble.sh.git \
+       && git -C "$tmp" fetch -q --depth 1 origin "$BLE_REF" \
+       && git -C "$tmp" checkout -q FETCH_HEAD && git -C "$tmp" submodule -q update --init --depth 1 \
+       && make -s -C "$tmp" install PREFIX="$HOME/.local" >/dev/null; then echo "$BLE_REF" > "$BLE_STAMP"
+    else echo "  skip  ble.sh (build failed)"; fi
     rm -rf "$tmp"
   fi
 fi
 
 say "linking config"
-for f in "$KIT"/bashrc.d/*.sh; do link "$f" "$HOME/.bashrc.d/$(basename "$f")"; done
 link "$KIT/config/starship.toml" "$HOME/.config/starship.toml"
 link "$KIT/config/blerc"         "$HOME/.blerc"
 link "$KIT/config/tmux.conf"     "$HOME/.tmux.conf"
+
+# your personal settings file: created once from the template, never overwritten
+CONF=$HOME/.config/terminal-kit/config.sh
+if [ ! -e "$CONF" ]; then say "creating $CONF (your settings)"; run mkdir -p "${CONF%/*}"; run cp "$KIT/config/config.template.sh" "$CONF"; fi
 
 # git: include our aliases/colors; add the delta look only if delta exists. Your name/email are never touched.
 include() { git config --global --get-all include.path 2>/dev/null | grep -qxF "$1" || run git config --global --add include.path "$1"; }
@@ -74,10 +115,25 @@ if ! grep -qs 'terminal-kit:loader' "$RC"; then
   if [ $DRY = 1 ]; then echo "  would: append the loader block to $RC"; else
   cat >> "$RC" <<'RCEOF'
 
-# terminal-kit:loader
-for _f in ~/.bashrc.d/*.sh; do [ -r "$_f" ] && . "$_f"; done; unset _f
-[[ ${BLE_VERSION-} ]] && ble-attach   # keep this last
+# terminal-kit:loader  (keep this block last)
+[[ $- == *i* && -r ~/.terminal-kit/loader.sh ]] && . ~/.terminal-kit/loader.sh
 RCEOF
+  fi
+fi
+
+# nvm: comment out the eager nvm lines so bashrc.d/70-nvm.sh can load it lazily (or restore them if
+# you switched that module off). Lines are tagged, so --uninstall can put them back exactly.
+NVM_RE='^[[:space:]]*[^#[:space:]].*(\.|source)[[:space:]].*(nvm\.sh|/bash_completion)'
+nvm_off=0; [ -r "$CONF" ] && (. "$CONF" >/dev/null 2>&1; [[ " ${TK_DISABLE[*]-} " == *" nvm "* ]]) && nvm_off=1
+if [ -f "$RC" ] && [ $nvm_off = 0 ] && grep -Eq "$NVM_RE" "$RC" && grep -Eq "$NVM_RE" <(grep -i nvm "$RC"); then
+  if [ $DRY = 1 ]; then echo "  would: comment out the nvm lines in $RC (nvm then loads on first use)"; else
+  cp "$RC" "$RC.bak.$(date +%s)"
+  RE=$NVM_RE awk 'tolower($0) ~ /nvm/ && $0 ~ ENVIRON["RE"] { print "# terminal-kit:nvm-off " $0; next } { print }' "$RC" > "$RC.new" && mv "$RC.new" "$RC"
+  say "nvm now loads on first use (its lines in ~/.bashrc are commented out, tagged terminal-kit:nvm-off)"
+  fi
+elif [ $nvm_off = 1 ] && grep -q '^# terminal-kit:nvm-off ' "$RC" 2>/dev/null; then
+  if [ $DRY = 1 ]; then echo "  would: restore the nvm lines in $RC"; else
+  sed -i 's/^# terminal-kit:nvm-off //' "$RC"; say "restored your nvm lines in ~/.bashrc"
   fi
 fi
 
@@ -97,6 +153,7 @@ next_steps() {
   if [ -z "$(git config --global user.name 2>/dev/null)" ] || [ -z "$(git config --global user.email 2>/dev/null)" ]; then
     printf '  %d. Tell git who you are (needed for commits):\n       git config --global user.name  "Your Name"\n       git config --global user.email "you@example.com"\n' $n; n=$((n+1))
   fi
+  printf '  %d. Your settings (turn modules off, set your name): ~/.config/terminal-kit/config.sh\n' $n; n=$((n+1))
   printf '  %d. Try it:  menu   (every command in one list)   ·   proj   ·   git lg   ·   Ctrl-R\n' $n
   command -v claude >/dev/null && printf '     ? how do I undo my last git commit      (asks Claude Code)\n'
   for c in starship fzf zoxide eza tmux lazygit mc micro btop; do command -v "$c" >/dev/null || [ -x "$BIN/$c" ] || miss+=("$c"); done

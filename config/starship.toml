@@ -8,6 +8,7 @@ right_format = "$status$cmd_duration${custom.runtimes}"
 style = "bold #7aa2f7"
 truncation_length = 3
 truncation_symbol = "…/"
+format = " [$path]($style)[$read_only]($read_only_style) "
 [git_branch]
 symbol = " "
 style = "bold #bb9af7"
@@ -58,10 +59,9 @@ style_user = "bold #7dcfff"
 style_root = "bold #f7768e"
 format = "[$user]($style)"
 [hostname]
-# aliases = { "YOUR-LONG-HOSTNAME" = "wsl" }   # shorten the host name shown in the prompt
-ssh_only = false
+ssh_only = true          # on your own machine the host name is noise; over SSH it tells you where you are
 style = "bold #7dcfff"
-format = "[@$hostname]($style) "
+format = "[@$hostname]($style)"
 
 # php/node versions: shown ONCE when you enter a git repo (state kept per shell in /tmp)
 [custom.runtimes]

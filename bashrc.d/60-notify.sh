@@ -1,6 +1,6 @@
 # Windows toast for long commands (needs ble.sh)
 # --- notify on long commands (Windows toast via ble.sh hooks) ---
-NOTIFY_AFTER=30   # seconds
+NOTIFY_AFTER=${NOTIFY_AFTER:-30}   # seconds; set it in ~/.config/terminal-kit/config.sh
 _toast() {  # _toast <title> <body>
   local t=${1//[\'\"\`\$]/} b=${2//[\'\"\`\$]/}
   powershell.exe -NoProfile -Command "[void][Windows.UI.Notifications.ToastNotificationManager,Windows.UI.Notifications,ContentType=WindowsRuntime]; \$x=[Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent('ToastText02'); \$n=\$x.GetElementsByTagName('text'); [void]\$n[0].AppendChild(\$x.CreateTextNode('$t')); [void]\$n[1].AppendChild(\$x.CreateTextNode('$b')); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe').Show([Windows.UI.Notifications.ToastNotification]::new(\$x))" >/dev/null 2>&1 &
