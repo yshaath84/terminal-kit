@@ -38,7 +38,8 @@ _menu_items() {
     'killport|Free a port (asks for the number)' \
     'gclean|Delete merged git branches' \
     'ask|Ask the AI assistant (asks for the question)' \
-    'explain|Explain your last command'; do
+    'explain|Explain your last command' \
+    'kit-update|Update terminal-kit to the latest version'; do
     type -t "${l%%|*}" >/dev/null && echo "$l"
   done
 }

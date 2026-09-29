@@ -77,6 +77,25 @@ echo 'TK_DISABLE=(nvm)' >> "$H/.config/terminal-kit/config.sh"; inst
 ok "disabling nvm restores the lines" '! grep -q terminal-kit:nvm-off "$H/.bashrc" && grep -qx "\[ -s \"\$NVM_DIR/nvm.sh\" \] && \\\\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm" "$H/.bashrc"'
 rm -rf "$H"
 
+echo "kit-update"
+G=(-c user.name=t -c user.email=t@t)
+newhome; git -C "$KIT" add -A; git "${G[@]}" -C "$KIT" commit -qm wip --allow-empty; git -C "$KIT" checkout -q -B main
+git clone -q --bare "$KIT" "$H/up.git"; git -C "$KIT" remote remove origin 2>/dev/null
+git -C "$KIT" remote add origin "$H/up.git"; git -C "$KIT" fetch -q origin; git -C "$KIT" branch -q -u origin/main
+git clone -q "$H/up.git" "$H/w"; echo 'hello() { echo hi-from-new-module; }' > "$H/w/bashrc.d/85-hello.sh"
+git -C "$H/w" add -A; git "${G[@]}" -C "$H/w" commit -qm hello; git -C "$H/w" push -q
+inst
+echo '# my edit' >> "$KIT/bashrc.d/10-shell.sh"
+out=$(HOME=$H bash -c '. ~/.terminal-kit/bashrc.d/80-update.sh; kit-update; echo "rc=$?"' </dev/null 2>&1)
+ok "refuses when kit files were edited" '[[ $out == *"kit-update stopped"*"10-shell.sh"*"rc=1" ]]'
+ok "and pulls nothing"                '[ ! -e "$KIT/bashrc.d/85-hello.sh" ]'
+git -C "$KIT" checkout -q -- .
+HOME=$H bash -c '. ~/.terminal-kit/bashrc.d/80-update.sh; kit-update' </dev/null >/dev/null 2>&1
+ok "pulls the new module"             '[ -e "$KIT/bashrc.d/85-hello.sh" ]'
+out=$(cd "$H" && HOME=$H bash -ic hello 2>/dev/null)
+ok "new module is live, no re-link"   '[[ $out == *hi-from-new-module* ]]'
+rm -rf "$H"
+
 echo "WSL: Windows folders leave PATH, Windows tools stay usable"
 H=$(mktemp -d); mkdir -p "$H/Users/bob"; printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/Users/bob/tool.exe"; chmod +x "$H/Users/bob/tool.exe"
 wp() { WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c "WSL_WIN_TOOLS=(\"mytool=$H/Users/*/tool.exe\" \"gone=$H/nope.exe\"); . $SRC/bashrc.d/05-winpath.sh; $1" 2>&1; }
