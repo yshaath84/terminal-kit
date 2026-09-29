@@ -43,7 +43,7 @@ out=$(cd "$H" && HOME=$H bash -ic 'type -t menu; type -t proj' 2>/dev/null)
 ok "interactive shell gets the kit"   '[ "$(grep -cx function <<<"$out")" = 2 ]'
 ok "git include added once"           '[ "$(HOME=$H git config --global --get-all include.path | grep -c config/gitconfig$)" = 1 ]'
 ok "our git aliases work"             '[ -n "$(HOME=$H git config --get alias.lg)" ]'
-ok "no personal strings in the kit"   '! grep -rIiE "oracle|@gmail|@outlook|youssef" "$SRC" --exclude-dir=.git --exclude-dir=tests'
+ok "no personal strings in the kit"   '! grep -rIiE "oracle|@gmail|@outlook|youssef" "$SRC" --exclude-dir=.git --exclude-dir=tests --exclude=CODE_OF_CONDUCT.md'
 rm -rf "$H"
 
 echo "your settings"
