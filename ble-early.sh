@@ -5,4 +5,5 @@
 # config.sh is only sourced later (by loader.sh), so read the switch without running it.
 # ponytail: TK_DISABLE must be on one line to be seen here; source config.sh early if that ever bites.
 grep -Eqs '^[[:space:]]*TK_DISABLE=.*[(" ]ble[) "]' ~/.config/terminal-kit/config.sh && return 0
+# shellcheck source=/dev/null  # third-party, installed by install.sh
 source ~/.local/share/blesh/ble.sh --noattach
