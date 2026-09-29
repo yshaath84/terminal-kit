@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
 # Proves install.sh never damages what a user already has. Uses a throwaway HOME; no network, no sudo.
 set -uo pipefail
-KIT=$(cd "$(dirname "$0")/.." && pwd); pass=0; fail=0
+SRC=$(cd "$(dirname "$0")/.." && pwd); pass=0; fail=0
 ok() { if eval "$2"; then echo "  PASS  $1"; pass=$((pass+1)); else echo "  FAIL  $1"; fail=$((fail+1)); fi; }
+# newhome: a throwaway HOME with the kit cloned where it must live (~/.terminal-kit)
+newhome() { H=$(mktemp -d); cp -r "$SRC" "$H/.terminal-kit"; KIT=$H/.terminal-kit; }
 inst() { HOME=$H bash "$KIT/install.sh" --no-apt --no-download "$@" >/dev/null 2>&1; }
 
 echo "syntax"
-for f in "$KIT"/install.sh "$KIT"/bashrc.d/*.sh; do ok "bash -n ${f#$KIT/}" 'bash -n "$f"'; done
+for f in "$SRC"/install.sh "$SRC"/loader.sh "$SRC"/bashrc.d/*.sh; do ok "bash -n ${f#$SRC/}" 'bash -n "$f"'; done
+
+echo "location"
+H=$(mktemp -d)
+ok "refuses to install outside ~/.terminal-kit" '! HOME=$H bash "$SRC/install.sh" --no-apt --no-download >/dev/null 2>&1'
+ok "writes nothing when it refuses"   '[ -z "$(ls -A "$H")" ]'
+rm -rf "$H"
 
 echo "dry run writes nothing"
-H=$(mktemp -d); inst --dry-run
-ok "empty HOME after --dry-run" '[ -z "$(ls -A "$H")" ]'; rm -rf "$H"
+newhome; inst --dry-run
+ok "HOME untouched after --dry-run"   '[ "$(ls -A "$H")" = .terminal-kit ]'; rm -rf "$H"
 
 echo "a user with an existing setup"
-H=$(mktemp -d); mkdir -p "$H/.config"
+newhome; mkdir -p "$H/.config"
 printf '# mine\nalias mine=1\n' > "$H/.bashrc"
 echo 'set -g prefix C-a' > "$H/.tmux.conf"
 echo 'add_newline = true' > "$H/.config/starship.toml"
@@ -29,22 +37,25 @@ ok "their starship.toml backed up"    'grep -qx "add_newline = true" "$H"/.confi
 ok "our tmux.conf is linked"          '[ "$(readlink "$H/.tmux.conf")" = "$KIT/config/tmux.conf" ]'
 ok "git name kept"                    '[ "$(HOME=$H git config --global user.name)" = Friend ]'
 ok "git email kept"                   '[ "$(HOME=$H git config --global user.email)" = friend@example.com ]'
+ok "loader sources the kit"          'grep -q "\. ~/.terminal-kit/loader.sh" "$H/.bashrc"'
+out=$(cd "$H" && HOME=$H bash -ic 'type -t menu; type -t proj' 2>/dev/null)
+ok "interactive shell gets the kit"   '[ "$(grep -cx function <<<"$out")" = 2 ]'
 ok "git include added once"           '[ "$(HOME=$H git config --global --get-all include.path | grep -c config/gitconfig$)" = 1 ]'
 ok "our git aliases work"             '[ -n "$(HOME=$H git config --get alias.lg)" ]'
-ok "no personal strings in the kit"   '! grep -rIiE "oracle|@gmail|@outlook|youssef" "$KIT" --exclude-dir=.git --exclude-dir=tests'
+ok "no personal strings in the kit"   '! grep -rIiE "oracle|@gmail|@outlook|youssef" "$SRC" --exclude-dir=.git --exclude-dir=tests'
 rm -rf "$H"
 
 echo "WSL: Windows folders leave PATH, chosen tools stay usable"
 H=$(mktemp -d); printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/fake.exe"; chmod +x "$H/fake.exe"
-out=$(WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c 'WSL_WIN_TOOLS=("mytool=$1"); . "$0"; echo "$PATH"; mytool 1' "$KIT/bashrc.d/05-wsl-path.sh" "$H/fake.exe" 2>&1)
+out=$(WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c 'WSL_WIN_TOOLS=("mytool=$1"); . "$0"; echo "$PATH"; mytool 1' "$SRC/bashrc.d/05-wsl-path.sh" "$H/fake.exe" 2>&1)
 ok "no /mnt entries left on PATH"     '[[ $(head -1 <<<"$out") == /usr/bin:/bin ]]'
 ok "chosen tool still runs"           '[[ $(tail -1 <<<"$out") == "hello-from-win 1" ]]'
-out=$(unset WSL_DISTRO_NAME; PATH="/usr/bin:/mnt/c/Windows" bash -c '. "$0"; echo "$PATH"' "$KIT/bashrc.d/05-wsl-path.sh")
+out=$(unset WSL_DISTRO_NAME; PATH="/usr/bin:/mnt/c/Windows" bash -c '. "$0"; echo "$PATH"' "$SRC/bashrc.d/05-wsl-path.sh")
 ok "outside WSL, PATH is untouched"   '[[ $out == /usr/bin:/mnt/c/Windows ]]'
 rm -rf "$H"
 
 echo "the closing message"
-H=$(mktemp -d)   # a fresh user with no git identity
+newhome   # a fresh user with no git identity
 out=$(HOME=$H bash "$KIT/install.sh" --no-apt --no-download 2>&1)
 ok "prints the next steps"            '[[ $out == *"What to do next"* && $out == *"exec bash"* ]]'
 ok "asks for a git identity when missing" '[[ $out == *"Tell git who you are"* ]]'

@@ -3,12 +3,18 @@
 # Flags: --dry-run (print every change, write nothing)  --no-apt (skip apt)  --no-download (skip starship/delta/ble.sh)
 set -euo pipefail
 KIT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+if ! [ "$KIT" -ef "$HOME/.terminal-kit" ]; then
+  echo "terminal-kit must live in ~/.terminal-kit (it is in $KIT). Clone it there:" >&2
+  echo "  git clone https://github.com/yshaath84/terminal-kit ~/.terminal-kit && ~/.terminal-kit/install.sh" >&2
+  exit 1
+fi
+KIT=$HOME/.terminal-kit
 BIN=$HOME/.local/bin; APT=1; DL=1; DRY=0
 for a in "$@"; do case $a in --no-apt) APT=0;; --no-download) DL=0;; --dry-run) DRY=1;; *) echo "unknown flag: $a" >&2; exit 1;; esac; done
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 # run <cmd...>: execute, or just print it under --dry-run
 run() { if [ $DRY = 1 ]; then echo "  would: $*"; else "$@"; fi; }
-run mkdir -p "$BIN" "$HOME/.config" "$HOME/.bashrc.d"
+run mkdir -p "$BIN" "$HOME/.config"
 
 # link <src> <dst>: symlink; anything already there (not our link) is moved to <dst>.bak.<time>
 link() {
@@ -50,7 +56,6 @@ elif [ $DL = 1 ]; then
 fi
 
 say "linking config"
-for f in "$KIT"/bashrc.d/*.sh; do link "$f" "$HOME/.bashrc.d/$(basename "$f")"; done
 link "$KIT/config/starship.toml" "$HOME/.config/starship.toml"
 link "$KIT/config/blerc"         "$HOME/.blerc"
 link "$KIT/config/tmux.conf"     "$HOME/.tmux.conf"
@@ -74,9 +79,8 @@ if ! grep -qs 'terminal-kit:loader' "$RC"; then
   if [ $DRY = 1 ]; then echo "  would: append the loader block to $RC"; else
   cat >> "$RC" <<'RCEOF'
 
-# terminal-kit:loader
-for _f in ~/.bashrc.d/*.sh; do [ -r "$_f" ] && . "$_f"; done; unset _f
-[[ ${BLE_VERSION-} ]] && ble-attach   # keep this last
+# terminal-kit:loader  (keep this block last)
+[[ $- == *i* && -r ~/.terminal-kit/loader.sh ]] && . ~/.terminal-kit/loader.sh
 RCEOF
   fi
 fi
