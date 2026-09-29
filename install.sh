@@ -129,8 +129,9 @@ fi
 # nvm: comment out the eager nvm lines so bashrc.d/70-nvm.sh can load it lazily (or restore them if
 # you switched that module off). Lines are tagged, so --uninstall can put them back exactly.
 NVM_RE='^[[:space:]]*[^#[:space:]].*(\.|source)[[:space:]].*(nvm\.sh|/bash_completion)'
+nvm_off=0
 # shellcheck source=/dev/null  # the user's config.sh, read in a subshell only to see TK_DISABLE
-nvm_off=0; [ -r "$CONF" ] && (. "$CONF" >/dev/null 2>&1; [[ " ${TK_DISABLE[*]-} " == *" nvm "* ]]) && nvm_off=1
+[ -r "$CONF" ] && (. "$CONF" >/dev/null 2>&1; [[ " ${TK_DISABLE[*]-} " == *" nvm "* ]]) && nvm_off=1
 if [ -f "$RC" ] && [ $nvm_off = 0 ] && grep -Eq "$NVM_RE" "$RC" && grep -Eq "$NVM_RE" <(grep -i nvm "$RC"); then
   if [ $DRY = 1 ]; then echo "  would: comment out the nvm lines in $RC (nvm then loads on first use)"; else
   cp "$RC" "$RC.bak.$(date +%s)"
