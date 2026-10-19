@@ -49,9 +49,9 @@ link() {
 
 if [ $APT = 1 ] && command -v apt-get >/dev/null; then
   say "installing packages with apt (asks for your sudo password)"
-  if [ $DRY = 1 ]; then echo "  would: sudo apt-get install git curl make gawk lsof bsdextrautils tmux fzf zoxide bat eza fd-find mc micro lazygit btop"; else
+  if [ $DRY = 1 ]; then echo "  would: sudo apt-get install git curl make gawk lsof bsdextrautils tmux fzf zoxide bat eza fd-find mc micro lazygit btop libfribidi-bin"; else
   sudo apt-get update -qq
-  for p in git curl make gawk lsof bsdextrautils tmux fzf zoxide bat eza fd-find mc micro lazygit btop; do
+  for p in git curl make gawk lsof bsdextrautils tmux fzf zoxide bat eza fd-find mc micro lazygit btop libfribidi-bin; do
     if sudo apt-get install -y -qq "$p" >/dev/null 2>&1; then echo "  ok    $p"; else echo "  skip  $p (not available on your system)"; fi
   done
   fi

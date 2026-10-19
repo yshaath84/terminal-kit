@@ -25,6 +25,14 @@ if command -v micro >/dev/null; then alias edit='micro'; export EDITOR=micro VIS
 
 alias cls='clear'
 
+# rtl: show Arabic output in the right order, with joined letters. Windows Terminal has no right-to-left
+# support, so Arabic prints reversed. Pipe into it:  cat BACKLOG.md | rtl   (for editing, use: code file)
+# Colours are stripped first: fribidi would treat the escape codes as text.
+rtl() {
+  if ! command -v fribidi >/dev/null; then echo "rtl needs fribidi: sudo apt install libfribidi-bin" >&2; cat; return; fi
+  sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | fribidi --nobreak --nopad
+}
+
 # work: tmux session for this folder — shell (left), dev server (top right), spare shell (bottom right)
 work() {
   local s; s=$(basename "$PWD" | tr . _)
