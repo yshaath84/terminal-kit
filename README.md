@@ -43,6 +43,7 @@ Without it you'll see empty boxes instead of icons.
 | `Ctrl-R` · `Ctrl-T` · `Alt-C` | fzf: search history · pick a file · jump to a folder |
 | `git lg` `st` `br` `fresh` `undo` … | Nicer git aliases (`git aliases` lists them) |
 | `kit-update` | Get the latest terminal-kit |
+| `Alt+A` | Type Arabic on this command line. Otherwise an Arabic keyboard layout still types English (`لهف` → `git`) |
 
 Also:
 - `git diff` through [delta](https://github.com/dandavison/delta).
@@ -56,7 +57,7 @@ Also:
 the kit in every shell, and never changed by the installer or `kit-update`. In it you can:
 
 ```bash
-TK_DISABLE=(laravel copilot)   # switch modules off: laravel copilot smartcd notify winpath nvm ble ... (one line)
+TK_DISABLE=(laravel copilot)   # switch modules off: laravel copilot smartcd enkeys notify winpath nvm ble ... (one line)
 TK_NAME="Sam"                  # name in the greeting
 NOTIFY_AFTER=60                # seconds before a Windows toast
 WSL_WIN_TOOLS=("mytool=/mnt/c/tools/mytool.exe")   # more Windows programs to keep runnable
