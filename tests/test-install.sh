@@ -157,6 +157,20 @@ ok "php without artisan is left alone" '[[ $(comp "php script.ph") == "rc=1 "* ]
 rm -rf "$H"
 fi
 
+echo "new terminal opens where you last were"
+H=$(mktemp -d); mkdir -p "$H/proj" "$H/other" "$H/.local/state/terminal-kit"
+ld() { (cd "$1" && HOME=$H bash -c '. "$0"; echo "$PWD"' "$SRC/bashrc.d/15-lastdir.sh"); }
+echo "$H/proj" > "$H/.local/state/terminal-kit/lastdir"
+ok "opened at ~ → goes to the last folder" '[ "$(ld "$H")" = "$H/proj" ]'
+ok "opened in a folder → stays there"  '[ "$(ld "$H/other")" = "$H/other" ]'
+echo "$H/gone" > "$H/.local/state/terminal-kit/lastdir"
+ok "last folder deleted → stays at ~"  '[ "$(ld "$H")" = "$H" ]'
+rm "$H/.local/state/terminal-kit/lastdir"
+(cd "$H/other" && HOME=$H bash -c '. "$0"; _tk_lastdir_save; cd "$HOME/proj"; _tk_lastdir_save' "$SRC/bashrc.d/15-lastdir.sh")
+ok "saves only when the folder changes" '[ "$(cat "$H/.local/state/terminal-kit/lastdir")" = "$H/proj" ]'
+ok "Windows home counts as a default start" '[[ /mnt/c/Users/Sam =~ ^/mnt/[a-z]/Users/[^/]+$ && ! /mnt/c/Users/Sam/code =~ ^/mnt/[a-z]/Users/[^/]+$ ]]'
+rm -rf "$H"
+
 echo "WSL: Windows folders leave PATH, Windows tools stay usable"
 H=$(mktemp -d); mkdir -p "$H/Users/bob"; printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/Users/bob/tool.exe"; chmod +x "$H/Users/bob/tool.exe"
 wp() { WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c "WSL_WIN_TOOLS=(\"mytool=$H/Users/*/tool.exe\" \"gone=$H/nope.exe\"); . $SRC/bashrc.d/05-winpath.sh; $1" 2>&1; }

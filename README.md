@@ -45,6 +45,7 @@ Windows Terminal itself can't show right-to-left text in the right order; pipe A
 |---|---|
 | `menu` | Pick any command below from a list (asks for arguments when needed) |
 | `proj` | Jump to any git repo under `~` (fuzzy search) |
+| (new terminal) | Opens in the folder you were last in. `cd` alone takes you home |
 | `cd name` | If the folder isn't here, jumps to the best match you visited before |
 | `dev` | Start this project's dev server (Laravel or Node) |
 | `work` | tmux session: shell + dev server + spare shell, mouse enabled |
@@ -73,7 +74,7 @@ Also:
 the kit in every shell, and never changed by the installer or `kit-update`. In it you can:
 
 ```bash
-TK_DISABLE=(laravel copilot)   # switch modules off: laravel copilot smartcd enkeys notify winpath nvm ble ... (one line)
+TK_DISABLE=(laravel copilot)   # switch modules off: laravel copilot smartcd lastdir enkeys notify winpath nvm ble ... (one line)
 TK_NAME="Sam"                  # name in the greeting
 NOTIFY_AFTER=60                # seconds before a Windows toast
 WSL_WIN_TOOLS=("mytool=/mnt/c/tools/mytool.exe")   # more Windows programs to keep runnable
