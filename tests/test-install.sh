@@ -136,6 +136,13 @@ inst; inst
 ok "older ble line upgraded, once"    '[ "$(grep -c terminal-kit:ble "$H/.bashrc")" = 1 ] && grep -q "ble-early.sh" "$H/.bashrc" && ! grep -q "blesh/ble.sh --noattach" "$H/.bashrc" && grep -qx "# mine" "$H/.bashrc"'
 rm -rf "$H"
 
+echo "rtl"
+H=$(mktemp -d); printf '#!/bin/sh\necho "args:$*"; cat\n' > "$H/fribidi"; chmod +x "$H/fribidi"
+out=$(PATH="$H:$PATH" bash -c '. "$0"; printf "\033[1;31mمرحبا\033[0m\n" | rtl' "$SRC/bashrc.d/20-tools.sh" 2>&1)
+ok "rtl calls fribidi without wrapping" '[[ $out == *"args:--nobreak --nopad"* ]]'
+ok "rtl strips colour codes first"    '[[ $out == *"مرحبا"* && $out != *$'"'"'\033'"'"'* ]]'
+rm -rf "$H"
+
 echo "WSL: Windows folders leave PATH, Windows tools stay usable"
 H=$(mktemp -d); mkdir -p "$H/Users/bob"; printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/Users/bob/tool.exe"; chmod +x "$H/Users/bob/tool.exe"
 wp() { WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c "WSL_WIN_TOOLS=(\"mytool=$H/Users/*/tool.exe\" \"gone=$H/nope.exe\"); . $SRC/bashrc.d/05-winpath.sh; $1" 2>&1; }
