@@ -26,6 +26,19 @@ Install a Nerd Font on **Windows** (e.g. *JetBrainsMono Nerd Font* from nerdfont
 Windows Terminal → Settings → your Ubuntu profile → Appearance → Font face: `JetBrainsMono Nerd Font Mono`.
 Without it you'll see empty boxes instead of icons.
 
+**Arabic text.** Nerd Fonts have no Arabic letters, so Windows Terminal borrows them from a random font and
+they look out of place. Add a monospaced font that has Arabic after yours, separated by a comma:
+
+```json
+"font": { "face": "JetBrainsMono NFM, DejaVu Sans Mono" }
+```
+
+- *DejaVu Sans Mono* is the clearest; install it from [dejavu-fonts.github.io](https://dejavu-fonts.github.io).
+- *Courier New* comes with Windows; use it if you don't want to install anything.
+- Proportional Arabic fonts such as *Noto Naskh Arabic* look better on their own, but they crowd the terminal's fixed-width cells.
+
+Windows Terminal itself can't show right-to-left text in the right order; pipe Arabic output through `rtl`.
+
 ## What you get
 
 | Type | What it does |
