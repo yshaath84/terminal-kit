@@ -31,3 +31,9 @@ function ble/widget/tk-accept-or-newline {
 }
 ble-bind -m emacs -f C-m tk-accept-or-newline
 ble-bind -m emacs -f RET tk-accept-or-newline
+
+# Esc clears the whole command line, like PowerShell, even a pasted multi-line script.
+# Binding C-[ makes ble.sh treat a lone Esc as a key of its own; Esc followed at once by a key is still
+# Alt+key, so Alt+A, Alt+Enter and Alt+C keep working. Ctrl+Y brings the cleared text back.
+function ble/widget/tk-clear-text { ble/widget/kill-backward-text; ble/widget/kill-forward-text; }
+ble-bind -m emacs -f 'C-[' tk-clear-text
