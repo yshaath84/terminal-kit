@@ -43,6 +43,7 @@ Without it you'll see empty boxes instead of icons.
 | `Ctrl-R` · `Ctrl-T` · `Alt-C` | fzf: search history · pick a file · jump to a folder |
 | `git lg` `st` `br` `fresh` `undo` … | Nicer git aliases (`git aliases` lists them) |
 | `kit-update` | Get the latest terminal-kit |
+| Paste a script, press `Enter` | Runs all of it once the code is complete; incomplete code (an open `if` or quote) gets a new line. `Alt+Enter` always adds a line |
 | `Alt+A` | Type Arabic on this command line. Otherwise an Arabic keyboard layout still types English (`لهف` → `git`) |
 
 Also:

@@ -9,7 +9,7 @@ newhome() { H=$(mktemp -d); cp -r "$SRC" "$H/.terminal-kit"; KIT=$H/.terminal-ki
 inst() { HOME=$H bash "$KIT/install.sh" --no-apt --no-download "$@" >/dev/null 2>&1; }
 
 echo "syntax"
-for f in "$SRC"/install.sh "$SRC"/loader.sh "$SRC"/ble-early.sh "$SRC"/bashrc.d/*.sh; do ok "bash -n ${f#$SRC/}" 'bash -n "$f"'; done
+for f in "$SRC"/config/blerc "$SRC"/install.sh "$SRC"/loader.sh "$SRC"/ble-early.sh "$SRC"/bashrc.d/*.sh; do ok "bash -n ${f#$SRC/}" 'bash -n "$f"'; done
 
 echo "location"
 H=$(mktemp -d)
