@@ -6,7 +6,7 @@ _tk_lastdir=${XDG_STATE_HOME:-$HOME/.local/state}/terminal-kit/lastdir
 # restore
 if [[ $PWD == "$HOME" || $PWD =~ ^/mnt/[a-z]/Users/[^/]+$ ]] && [ -r "$_tk_lastdir" ]; then
   read -r _d < "$_tk_lastdir"
-  [[ -n $_d && $_d != "$PWD" && -d $_d ]] && builtin cd -- "$_d"
+  [[ -n $_d && $_d != "$PWD" && -d $_d ]] && builtin cd -- "$_d" || :   # if it fails, just stay where we are
   unset _d
 fi
 
