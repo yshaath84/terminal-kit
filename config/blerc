@@ -21,3 +21,13 @@ ble-face argument_error='fg=#f7768e'
 bleopt prompt_ps1_transient=trim            # old prompts collapse to just the ❯ line
 bleopt exec_errexit_mark=                   # no "[ble: exit 1]" line; the prompt already shows ✘
 bleopt prompt_rps1_transient=always
+
+# Enter runs the command whenever it is complete, even across several lines, so a pasted multi-line
+# script runs with one Enter (ble.sh's default only runs single lines and adds a new line otherwise).
+# Incomplete code (an open quote, `if` without `fi`) still gets a new line. Alt+Enter always adds one.
+function ble/widget/tk-accept-or-newline {
+  ble-edit/content/update-syntax
+  if ble/syntax:bash/is-complete; then ble/widget/accept-line; else ble/widget/newline; fi
+}
+ble-bind -m emacs -f C-m tk-accept-or-newline
+ble-bind -m emacs -f RET tk-accept-or-newline
