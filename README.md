@@ -50,7 +50,7 @@ Windows Terminal itself can't show right-to-left text in the right order; pipe A
 | `work` | tmux session: shell + dev server + spare shell, mouse enabled |
 | `files` · `git-ui` · `edit f` · `monitor` | File manager (mc) · Git UI (lazygit) · editor (micro) · system monitor (btop) |
 | `newlaravel app` · `newnode app` | New project in `~/code`, with git |
-| `art` · `migrate` · `tinker` · `logs` | Laravel shortcuts |
+| `art` · `migrate` · `tinker` · `logs` | Laravel shortcuts. `php artisan …` and `art …` complete with Tab from your project's own commands and options (`make:mo` → `make:model`) |
 | `killport 8000` · `gclean` · `mkcd d` · `cls` | Free a port · delete merged branches · mkdir+cd · clear |
 | `? question` · `explain` · `ai` | Ask [Claude Code](https://claude.com/claude-code) (only if installed; uses your credits) |
 | `Ctrl-R` · `Ctrl-T` · `Alt-C` | fzf: search history · pick a file · jump to a folder |

@@ -143,6 +143,20 @@ ok "rtl calls fribidi without wrapping" '[[ $out == *"args:--nobreak --nopad"* ]
 ok "rtl strips colour codes first"    '[[ $out == *"مرحبا"* && $out != *$'"'"'\033'"'"'* ]]'
 rm -rf "$H"
 
+echo "artisan Tab completion"
+if [ -r /usr/share/bash-completion/bash_completion ]; then
+H=$(mktemp -d); touch "$H/artisan"
+# fake php: suggests make:model only when Laravel would get exactly the right request
+comp() { (cd "$H" && bash -c '. /usr/share/bash-completion/bash_completion; . "$0"
+  php() { local IFS=" "; [[ "$*" == "artisan _complete --no-interaction -sbash -c1 -a1 -iartisan -imake:mo" ]] && echo make:model; }
+  COMP_LINE=$1; COMP_POINT=${#1}; read -ra COMP_WORDS <<< "$1"; COMP_CWORD=$((${#COMP_WORDS[@]}-1))
+  _tk_artisan; echo "rc=$? ${COMPREPLY[*]}"' "$SRC/bashrc.d/41-laravel.sh" "$1"); }
+ok "php artisan make:mo<Tab> → make:model" '[[ $(comp "php artisan make:mo") == "rc=0 model" ]]'
+ok "art make:mo<Tab> → make:model"     '[[ $(comp "art make:mo") == "rc=0 model" ]]'
+ok "php without artisan is left alone" '[[ $(comp "php script.ph") == "rc=1 "* ]]'
+rm -rf "$H"
+fi
+
 echo "WSL: Windows folders leave PATH, Windows tools stay usable"
 H=$(mktemp -d); mkdir -p "$H/Users/bob"; printf '#!/bin/sh\necho hello-from-win "$@"\n' > "$H/Users/bob/tool.exe"; chmod +x "$H/Users/bob/tool.exe"
 wp() { WSL_DISTRO_NAME=x PATH="/usr/bin:/mnt/c/Windows:/bin:/mnt/c/Program Files/x y" bash -c "WSL_WIN_TOOLS=(\"mytool=$H/Users/*/tool.exe\" \"gone=$H/nope.exe\"); . $SRC/bashrc.d/05-winpath.sh; $1" 2>&1; }
