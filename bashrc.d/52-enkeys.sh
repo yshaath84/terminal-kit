@@ -22,6 +22,7 @@ for _p in 'ذ`' 'ضq' 'صw' 'ثe' 'قr' 'فt' 'غy' 'عu' 'هi' 'خo' 'حp' 'ج[
           'شa' 'سs' 'يd' 'بf' 'لg' 'اh' 'تj' 'نk' 'مl' 'ك;' "ط'" \
           'ئz' 'ءx' 'ؤc' 'رv' 'ىn' 'ةm' 'و,' 'ز.' 'ظ/'; do _tk_map "${_p:0:1}" "${_p:1}"; done
 # shifted: diacritics and Arabic punctuation become the shifted English key
+# shellcheck disable=SC1112  # ‘ and ’ are real keys on the Arabic layout (Shift+U, Shift+M), not typos
 for _p in 'ّ~' 'َQ' 'ًW' 'ُE' 'ٌR' 'إY' '‘U' '÷I' '×O' '؛P' 'ِA' 'ٍS' 'أH' 'ـJ' '،K' 'ْX' 'آN' '’M' '؟?'; do
   _tk_map "${_p:0:1}" "${_p:1}"; done
 unset _p
