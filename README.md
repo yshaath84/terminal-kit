@@ -58,6 +58,7 @@ Windows Terminal itself can't show right-to-left text in the right order; pipe A
 | `kit-update` | Get the latest terminal-kit |
 | Paste a script, press `Enter` | Runs all of it once the code is complete; incomplete code (an open `if` or quote) gets a new line. `Alt+Enter` always adds a line |
 | `… \| rtl` | Show Arabic output in the right order and joined (Windows Terminal can't do right-to-left). For Arabic files use `code file` |
+| `Esc` | Clear the whole command line, like PowerShell (`Ctrl+Y` brings it back) |
 | `Alt+A` | Type Arabic on this command line. Otherwise an Arabic keyboard layout still types English (`لهف` → `git`) |
 
 Also:
